@@ -27,6 +27,17 @@ async function bootstrap() {
     .setTitle('Global Chat API')
     .setDescription('API для чата')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth', // This name here is important for references
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
@@ -35,4 +46,4 @@ async function bootstrap() {
 
   await app.listen(PORT);
 }
-bootstrap();
+void bootstrap();
