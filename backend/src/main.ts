@@ -1,49 +1,60 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as compression from 'compression';
+import * as cors from 'cors';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
-
-const PORT = Number(process.env.BACKEND_PORT);
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
-  app.useGlobalPipes(new ValidationPipe());
 
-  const allowedOrigins = process.env.FRONTEND_URL
-    ? [
-        process.env.FRONTEND_URL,
-        'http://localhost:3000',
-        'http://localhost:4200',
-      ]
-    : ['http://localhost:3000', 'http://localhost:4200'];
+  // Security middleware
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+      credentials: true,
+    }),
+  );
+  app.use(compression());
 
-  app.enableCors({
-    origin: allowedOrigins,
-    credentials: true,
-  });
+  // Global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
+  // Swagger documentation
   const config = new DocumentBuilder()
     .setTitle('Global Chat API')
-    .setDescription('API для чата')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth', // This name here is important for references
+    .setDescription(
+      'API for Global Chat application - country-based chat rooms',
     )
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('Auth', 'Authentication endpoints')
+    .addTag('Users', 'User management endpoints')
+    .addTag('Countries', 'Country management endpoints')
+    .addTag('Chats', 'Chat management endpoints')
+    .addTag('Messages', 'Message management endpoints')
+    .addTag('Sessions', 'Session management endpoints')
     .build();
+
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
-  console.log('PORT', PORT);
-
-  await app.listen(PORT);
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`🚀 Application is running on: http://localhost:${port}`);
+  console.log(`📚 API Documentation: http://localhost:${port}/api`);
 }
-void bootstrap();
+
+bootstrap();

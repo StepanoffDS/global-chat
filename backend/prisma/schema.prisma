@@ -17,6 +17,19 @@ datasource db {
 enum CountryCode {
   RU
   US
+  GB
+  DE
+  FR
+  IT
+  ES
+  CA
+  AU
+  JP
+  CN
+  IN
+  BR
+  MX
+  AR
 }
 
 model User {
